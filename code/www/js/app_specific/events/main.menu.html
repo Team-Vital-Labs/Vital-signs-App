@@ -1,0 +1,39 @@
+<ion-view style="background-color: #272733;" can-swipe-back="false">
+
+    <ion-header-bar class="bar-dark" align-title="center">
+        <h1 class="title">BLE app</h1>
+    </ion-header-bar>
+
+    <ion-content class="has-header">
+        <div class='light'>
+            {{vm.name}}<br>
+            {{vm.login}}
+        </div>
+        <button ng-disabled="vm.isConnected" class="button button-positive col" style="margin: 5px; color: white;" ng-click="vm.scan()" style="position: absolute; width: 50%; left: 50%; transform: translate(-50%,0%);">
+            <span class="button-text">Scan for device</span>
+        </button>
+
+        <button ng-disabled="vm.isLoggedin" class="button button-positive col" style="margin: 5px; color: white;" ng-click="vm.authenticate()" style="position: absolute; width: 50%; left: 50%; transform: translate(-50%,0%);">
+            <span class="button-text">Login to OneDrive</span>
+        </button>
+
+        <button ng-disabled="!vm.isConnected" class="button button-positive col" style="margin: 5px; color: white;" ng-click="vm.disconnect()" style="position: absolute; width: 50%; left: 50%; transform: translate(-50%,0%);">
+            <span class="button-text">Disconnect</span>
+        </button>
+
+        <button ng-disabled="!vm.isLoggedin" class="button button-positive col" style="margin: 5px; color: white;" ng-click="vm.logout()" style="position: absolute; width: 50%; left: 50%; transform: translate(-50%,0%);">
+            <span class="button-text">Logout of OneDrive</span>
+        </button>
+
+        <button ng-disabled="!vm.isConnected" class="button button-positive col" style="margin: 5px; color: white;" ng-click="vm.startLoging()" style="position: absolute; width: 50%; left: 50%; transform: translate(-50%,0%);">
+            <span class="button-text">Start logging</span>
+        </button>
+
+        <button ng-disabled="!vm.isConnected || !vm.isLoggedin" class="button button-positive col" style="margin: 5px; color: white;" ng-click="vm.getFiles()" style="position: absolute; width: 50%; left: 50%; transform: translate(-50%,0%);">
+            <span class="button-text">Get Files</span>
+        </button>
+
+        
+    </ion-content>
+
+</ion-view>

@@ -1,0 +1,12 @@
+{
+  "name": "little_list",
+  "integrations": {
+    "cordova": {},
+    "gulp": {}
+  },
+  "type": "ionic1",
+  "app_id": "",
+  "gulp": {
+    "enabled": false
+  }
+}

@@ -1,0 +1,23 @@
+<ion-view style="background-color: #272733;" can-swipe-back="false">
+
+    <ion-header-bar class="bar-dark" align-title="center">
+        <h1 class="title">BLE app</h1>
+    </ion-header-bar>
+
+    <ion-content class="has-header">
+
+        Annotaion:<br>
+        <input style="margin: 5px" ng-model="vm.annotation" >
+        </input>
+
+        <button class="button button-positive col" style="margin: 5px; color: white;" ng-click="vm.annotate()">
+            <span class="button-text">Send Annotation</span>
+        </button>
+
+        <button class="button button-positive col" style="margin: 5px; color: white;" ng-click="vm.stopLog()" style="position: absolute; width: 50%; left: 50%; transform: translate(-50%,0%);">
+            <span class="button-text">Stop Logging</span>
+        </button>
+        
+    </ion-content>
+
+</ion-view>
