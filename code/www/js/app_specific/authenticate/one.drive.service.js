@@ -237,7 +237,7 @@
         // ------------------------------------------------
         // ------------------------------------------------
 
-        service.createFile = function(folderName, path){
+        service.createFolder = function(folderName, path){
             if (authenticateSrvc.getAuthInfo() == null) {
                 alert("Please 'Authenticate'.");
             } else {
@@ -268,7 +268,7 @@
 
                     function processRequest(e) {
                         if (uploadRequest.readyState == 4){}
-                        if(uploadRequest.status == 201 || uploadRequest.status == 200) { 
+                        if(uploadRequest.status == 201 || uploadRequest.status == 200 || uploadRequest.status ==409) { //409 is a conflict error, it should be fine if this happens
                             resolve(uploadRequest.responseText);
                         }
                         else{

@@ -23,9 +23,11 @@
             annotation: ""
          });
         
+        console.log("Logging");
+
         vm.stopLog = function(){
             vm.busy =true;
-            var message = eventsSrvc.stringToBytes("STOP");
+            var message = eventsSrvc.stringToBytes("_STOP_");
             eventsSrvc.writeAnnotation(message)
             .then(function(result){
                 vm.busy = false;

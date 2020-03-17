@@ -21,58 +21,90 @@
         //{"path":"/home/pi/bluetooth_pi_2-master/little_blue_pi/files",
         //"name":"files",
         //"children":[
-            //{"path":"/home/pi/bluetooth_pi_2-master/little_blue_pi/files/Sacramentorealestatetransactions.csv",
-            //"name":"Sacramentorealestatetransactions.csv",
-            //"size":113183,
-            //"extension":".csv",
-            //"type":"file"},
-            //{"path":"/home/pi/bluetooth_pi_2-master/little_blue_pi/files/test.csv",
-            //"name":"test.csv",
-            //"size":873,
-            //"extension":".csv",
-            //"type":"file"}],
-        //"size":114056,
-        //"type":"directory"}
-
-        eventsSrvc.getManifest()
-        .then(function(result){
+        //     {"path":"/home/pi/bluetooth_pi_2-master/little_blue_pi/files/2020-03-16_22-00-32",
+        //     "name":"2020-03-16_22-00-32",
+        //     "children":[
+        //         {"path":"/home/pi/bluetooth_pi_2-master/little_blue_pi/files/2020-03-16_22-00-32/Sacramentorealestatetransactions.csv",
+        //         "name":"Sacramentorealestatetransactions.csv",
+        //         "size":4229,
+        //         "extension":".csv",
+        //         "type":"file"},
+        //         {"path":"/home/pi/bluetooth_pi_2-master/little_blue_pi/files/2020-03-16_22-00-32/test.csv",
+        //         "name":"test.csv",
+        //         "size":1329,"extension":".csv",
+        //         "type":"file"}]
+        //         ,"size":5558,
+        //         "type":"directory"},
+        //     {"path":"/home/pi/bluetooth_pi_2-master/little_blue_pi/files/2020-03-16_22-03-54",
+        //     "name":"2020-03-16_22-03-54",
+        //     "children":[
+        //         {"path":"/home/pi/bluetooth_pi_2-master/little_blue_pi/files/2020-03-16_22-03-54/Sacramentorealestatetransactions.csv",
+        //         "name":"Sacramentorealestatetransactions.csv",
+        //         "size":4229,
+        //         "extension":".csv",
+        //         "type":"file"},
+        //         {"path":"/home/pi/bluetooth_pi_2-master/little_blue_pi/files/2020-03-16_22-03-54/test.csv",
+        //         "name":"test.csv",
+        //         "size":1329,
+        //         "extension":".csv",
+        //         "type":"file"}],
+        //     "size":5558,
+        //     "type":"directory"}],
+        // "size":11116,
+        // "type":"directory"}
+        oneDriveSrvc.createFolder("VitalSigns","").then(
+        eventsSrvc.getManifest().then(
+        async function(result){
             var manifest = JSON.parse(result);
             for(var i in manifest.children){
+
+                await oneDriveSrvc.createFolder(manifest.children[i].name,"VitalSigns")
+                .then(async function(result){
+                    for(var j in manifest.children[i].children){
+                        await eventsSrvc.getFile(manifest.children[i].children[j].path)
+                        .then(function(result){
+                            console.log("Getting into here fine");
+                            oneDriveSrvc.upload(result, "VitalSigns/"+manifest.children[i].name,manifest.children[i].children[j].name.substring(0,manifest.children[i].children[j].name.length-4))
+                            .then(function(result){
+                                alert(result);
+                            }).catch(function(err){
+                                console.log(err);
+                            });
+                        })
+                        .catch(
+                            function(error){
+                                alert("Sorry, " + error);
+                                $state.go('main_menu');
+                            }
+                        );
+            }})
+
                 
             }
-            eventsSrvc.getFile("test.csv")
-            .then(function(result){
-                console.log("Getting into here fine");
-                oneDriveSrvc.upload(result, "VitalSigns","test")
-                .then(function(result){
-                    $state.go('main_menu');
-                }).catch(function(err){
-                    console.log(err);
-                });
-            })
-            .catch(
-                function(error){
-                    alert("Sorry, " + error);
-                    $state.go('main_menu');
-                }
-            );
+
+            $state.go('main_menu');
+
+            // eventsSrvc.getFile("test.csv")
+            // .then(function(result){
+            //     console.log("Getting into here fine");
+            //     oneDriveSrvc.upload(result, "VitalSigns","test")
+            //     .then(function(result){
+            //         $state.go('main_menu');
+            //     }).catch(function(err){
+            //         console.log(err);
+            //     });
+            // })
+            // .catch(
+            //     function(error){
+            //         alert("Sorry, " + error);
+            //         $state.go('main_menu');
+            //     }
+            // );
         }).catch(function(err){
             console.log(err);
+        })).catch(function(err){
+            console.log(err);
         })
-
-
-
-
-        // manifest = {
-        //     "3folder_2":{
-        //         "name":"2020-03-18_15-34-10",
-        //       "file": ["test.csv", "jkdfghdfgssssssssssssssssssssssssssssssssshdfdfgdfsgsdfsdfdsfgdfgdfgbkdh"]
-        //     },
-        //     "folder-1":{
-        //         "name":"2020-03-18_15-28-34",
-        //       "file": ["test.csv","tis this one"]
-        //     }
-        //   }
 
 
         // eventsSrvc.getManifest()

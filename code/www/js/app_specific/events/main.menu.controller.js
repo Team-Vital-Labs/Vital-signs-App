@@ -67,7 +67,7 @@
         vm.startLoging = function(){
             vm.busy =true;
             eventsSrvc.connect().then(function(r){   
-                var message = eventsSrvc.stringToBytes("START");
+                var message = eventsSrvc.stringToBytes("_START_");
                 eventsSrvc.writeAnnotation(message)
                 .then(function(result){
                     vm.busy = false;

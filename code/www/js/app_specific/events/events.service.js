@@ -23,12 +23,13 @@
         var characteristic_id = "";
         var property = "";
         var isBusy = false;
+        var isConnecting = false;
         var service = {};
         var TIMEOUT_MS = 1000;
 
 
         var file ="";
-        var file_getting =false;
+        var file_getting = false;
         var file_recived_data = false;
         var done_var ={ aInternal: false,
             aListener: function(val) {},
@@ -43,15 +44,33 @@
                 this.aListener = listener;
         }}
 
+
+        var manifest = "";
+        var manifest_var ={ aInternal: false,
+            aListener: function(val) {},
+                set a(val) {
+                this.aInternal = val;
+                this.aListener(val);
+            },
+            get a() {
+                return this.aInternal;
+            },
+            registerListener: function(listener) {
+                this.aListener = listener;
+        }}
+
         //var writeAnnotationExpectedInfo = ["ec00", "ec0e"];
-        var writeAnnotationExpectedInfo = ["25576d0e-7452-4910-900b-1a9f82c19a7d", "a66ae744-46ab-459b-9942-5e502ac21640"];
+        //var writeAnnotationExpectedInfo = ["25576d0e-7452-4910-900b-1a9f82c19a7d", "a66ae744-46ab-459b-9942-5e502ac21640"];
+        var writeAnnotationExpectedInfo = ["a8a4d5bf-d2cb-4df5-8e95-a9d6ca7112cf","abb0994c-8312-480b-a253-57f3065c167d"];
         var notifyFileExpectedInfo = ["a8a4d5bf-d2cb-4df5-8e95-a9d6ca7112cf", "4ab6dea3-5256-47d5-b240-cee16ec4c3b9"];
         var manifestExpectedInfo = ["a8a4d5bf-d2cb-4df5-8e95-a9d6ca7112cf", "19cbb8e3-a1c5-4b9a-b98c-3ba0f3b10dc3"];
-
+        var deleteExpectedInfo = ["a8a4d5bf-d2cb-4df5-8e95-a9d6ca7112cf","d361aadb-2982-4bf7-803d-36fa6de048fb"]
+        //var pulseExpectedInfo =["a8a4d5bf-d2cb-4df5-8e95-a9d6ca7112cf","abb0994c-8312-480b-a253-57f3065c167d"];
 
         function startScan() {
             var deferred = $q.defer();
             isBusy = true;
+            isConnecting = false;
             eventsArray = [];
 
             $timeout(
@@ -465,18 +484,21 @@
         {
             
             return new Promise (function(resolve,reject){
-                // if (!isBusy) {
-                //     isBusy = true;
+                if (!isConnecting) {
+                    isConnecting = true;
 
-                    ble.connect(id,
+                    console.log(event.id);
+
+                    ble.connect(event.id,
                         function (data) {
                             console.log(JSON.stringify(data, null, 2));
                             detail = processDetail(data);
-                            isBusy = false;
+                            isConnecting = false;
                             resolve(detail);
                         },
-                        function(){
-                            isBusy = false;
+                        function(err){
+                            console.log(err);
+                            isConnecting = false;
                             alert("Failed or Disconnected from "+ id);
                             console.log("Failed or Disconnected from "+ id);
                             resetDevice();
@@ -484,16 +506,17 @@
                         }
                     );
                 }
-                // else{
-                //     reject("App is busy");
-                // }
+                else{
+                    //setTimeout(function(){connect(id).then(function(result){resolve(result)});}, 1000)
+                    reject("busy");
+                }
                 
-            //}
+            }
             );
         }
 
         service.connect = function(){
-            return connect(id);
+            return connect(event.id);
         }
 
         service.connectFromList = function(index){
@@ -516,6 +539,7 @@
              }
              return array.buffer;
          }
+
          service.stringToBytes= function(string){
              return stringToByte(string);
          }
@@ -528,33 +552,53 @@
             return new Promise (function(resolve,reject){
                 isBusy = true;
                 console.log("Sending message: " + message)
+                connect(event.id).then(function(result){
                 ble.write(event.id,writeAnnotationExpectedInfo[0],writeAnnotationExpectedInfo[1],message,
                     function(){
-                        isBusy = false;
-                        console.log("Sent!");
-                        resolve(true);
+                        disconnectWithoutForgetting().
+                        then(function(){
+                            isBusy = false;
+                            console.log("Sent!");
+                            resolve(true);
+                        }).catch(function(){
+                            isBusy = false;
+                            console.log("Sent!");
+                            resolve(true);
+                        });
                     },
                     function(){
+                        disconnectWithoutForgetting().
+                        then(function(){
+                            isBusy = false;
+                            console.log("failed " + event.id +" "+ writeAnnotationExpectedInfo[0] +" " +writeAnnotationExpectedInfo[1] );
+                            reject(false);
+                        }).catch(function(){
+                            isBusy = false;
+                            console.log("failed " + event.id +" "+ writeAnnotationExpectedInfo[0] +" " +writeAnnotationExpectedInfo[1] );
+                            reject(false);
+                        });
+
                         isBusy = false;
                         console.log("failed " + event.id +" "+ writeAnnotationExpectedInfo[0] +" " +writeAnnotationExpectedInfo[1] );
                         reject(false);
                     });
+                }).catch(function(err){reject(err);})
             });
         }
 
-        function stopNotification(){
-            return new Promise(function(resolve, reject){
-                ble.stopNotification(event.id,notifyFileExpectedInfo[0], notifyFileExpectedInfo[1],
-                    function(){
-                        console.log("Stopped Notifiying");
-                        resolve("done");
-                    }, 
-                    function(){
-                        console.log("This Failed!");
-                        reject("Failed");
-                });
-            });
-        }
+        // function stopNotification(){
+        //     return new Promise(function(resolve, reject){
+        //         ble.stopNotification(event.id,notifyFileExpectedInfo[0], notifyFileExpectedInfo[1],
+        //             function(){
+        //                 console.log("Stopped Notifiying");
+        //                 resolve("done");
+        //             }, 
+        //             function(){
+        //                 console.log("This Failed!");
+        //                 reject("Failed");
+        //         });
+        //     });
+        // }
 
         service.getFile = function(fileName){
             return new Promise(function(resolve, reject){
@@ -572,13 +616,15 @@
                             writeFileName(fileName)
                             .then(function(){
                                 file_recived_data = false;
-                                writeContinue().then(function(result){
+                                writeContinue(notifyFileExpectedInfo).then(function(result){
                                     console.log("got into here");
 
                                     done_var.registerListener(function(val) {
                                         console.log("About to stop Notification");
                                         disconnectWithoutForgetting().
                                         then(function(){
+                                            file_getting = false;
+                                            isBusy = false;
                                             resolve(file);
                                         }).catch(function(){
                                             console.log("FAILED");
@@ -603,6 +649,9 @@
                             isBusy = false;
                             reject(err);
                         });
+                     }).catch(function(err){
+                         console.log("THIS IS WHY");
+                         reject(err);
                     })}
                     else{
                         reject("Busy");
@@ -613,12 +662,10 @@
 
         }
 
-        //function startFileTransfer(fileName)
-
-        function writeContinue(){
+        function writeContinue(expectedInfo){
             return new Promise(function(resolve, reject){
                 var continueByte = stringToByte("CONTINUE");
-                ble.write(event.id,notifyFileExpectedInfo[0], notifyFileExpectedInfo[1],continueByte,
+                ble.write(event.id,expectedInfo[0], expectedInfo[1],continueByte,
                     function(){
                         //wait(100);
                         //console.log("TOLD PI TO CONTINUE");
@@ -645,18 +692,68 @@
         }
 
 
+        // service.getManifest = function(){
+        //     return new Promise(function(resolve, reject){
+        //         ble.read(event.id,manifestExpectedInfo[0], manifestExpectedInfo[1],
+        //             function(result){
+        //                 var decoded = new TextDecoder().decode(result);
+        //                 console.log("Manifest: " + decoded);
+        //                 resolve(decoded);
+        //             },function(){
+        //                 reject("Failed");
+        //             });
+        //     });
+        // }
+
         service.getManifest = function(){
             return new Promise(function(resolve, reject){
-                ble.read(event.id,manifestExpectedInfo[0], manifestExpectedInfo[1],
-                    function(result){
-                        var decoded = new TextDecoder().decode(result);
-                        console.log("Manifest: " + decoded);
-                        resolve(decoded);
-                    },function(){
-                        reject("Failed");
-                    });
-            });
+                if(!isBusy)
+                {
+                    manifest = "";
+                    connect(event.id)
+                    .then(function(result){
+
+                        setNotifyManifest()
+                        .then(function(){
+                            writeContinue(manifestExpectedInfo).then(function(result){
+                                console.log("got into here");
+
+                                manifest_var.registerListener(function(val) {
+                                    console.log("About to stop Notification");
+                                    disconnectWithoutForgetting().
+                                    then(function(){
+                                        console.log("did this so it")
+                                        isBusy = false;
+                                        console.log(manifest);
+                                        resolve(manifest);
+                                    }).catch(function(){
+                                        console.log("FAILED");
+                                    });
+                                });
+
+                            }).catch(function(err){
+                                file_getting = false;
+                                isBusy = false;
+                                reject(err);
+                            });
+                        }).catch(function(err){
+                            file_getting = false;
+                            isBusy = false;
+                            reject(err);
+                        });
+                     }).catch(function(err){
+                         console.log("THIS IS WHY");
+                         reject(err);
+                    })}
+                    else{
+                        reject("Busy");
+                    }
+                }); 
+            
+                
+
         }
+
 
         //INFO FOR THE CHARACTERIST IS SET AT THE TOP
         function setNotify(){
@@ -678,7 +775,7 @@
                             //console.log(file);
                             //file_recived_data=true;
                             //wait(100);
-                            writeContinue();
+                            writeContinue(notifyFileExpectedInfo);
                         }
                     },function(){
                         console.log("Notification Failed! ");
@@ -694,6 +791,7 @@
                 ble.disconnect(event.id,
                     function(){
                         console.log("Disconnected but still remebering info");
+                        alert("Disconnected without forgetting");
                         resolve("worked");
                     },
                     function(){
@@ -714,8 +812,8 @@
                 console.log("began disconnecting " + event.id)
                 ble.disconnect(event.id,
                     function(){
+                        console.log("Disconnected from " +event.id);
                         resetDevice();
-                        console.log("Disconnected from " +event.name);
                         resolve(true);
                     },
                     function(){
@@ -725,6 +823,37 @@
                     });
             });
         }
+
+
+        function setNotifyManifest(){
+            return new Promise(function(resolve, reject){
+
+                ble.write(event.id,manifestExpectedInfo[0], manifestExpectedInfo[1], null,
+                ble.startNotification(event.id,manifestExpectedInfo[0], manifestExpectedInfo[1],
+                    function(buffer){
+                        console.log("Got Notification");
+                        var decoded = new TextDecoder().decode(buffer);
+                        console.log(decoded);
+                        while(file_recived_data==true){console.log("Waiting for last info to process")}
+                        if(decoded == "DONE")
+                        {
+                            //console.log("done apparantly");
+                            manifest_var.a =true;
+                        }
+                        else{
+                            manifest += decoded;
+                            writeContinue(manifestExpectedInfo);
+                        }
+                    },function(){
+                        console.log("Notification Failed! ");
+                        alert("Notification Failed!");
+                    }));
+                console.log("Notification set");
+                resolve(true);
+            })
+        }
+
+
 
         function resetDevice()
         {
@@ -738,15 +867,6 @@
             isBusy = false;
             service = {};
         };
-
-        function wait(ms)
-        {
-        var d = new Date();
-        var d2 = null;
-        do { d2 = new Date(); }
-        while(d2-d < ms);
-        }
-
 
         return service;
 
